@@ -1,0 +1,483 @@
+
+# top level schema definition
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+###################
+#
+# Common
+#
+###################
+
+# indicate the satatus of any item
+enum ItemStatusEnum {
+  DISABLED
+  DELETED
+  ACTIVE
+  CREATED
+}
+
+type Timestamp {
+  createdAt: AWSDateTime # Date and time (UTC) the ProductType was initially created.
+  createdBy: AWSEmail # user who created thie item.
+  lastModifiedAt: AWSDateTime # Date and time (UTC) the item was last updated.
+  lastModifiedBy: AWSEmail # user who last modified the item.
+}
+
+type Language {
+  Language: Language #
+  name: String #   
+}
+
+
+interface IAddress {
+  address: String! #
+  city: String! #
+  postalCode: String! #
+  stateOrProvince: String! #
+  country: String! #
+  zone: String #
+}
+
+type BillingAddress implements IAddress {
+  lastName: String! #
+  firstName: String! #
+  company: String #
+  telephone: String #
+  address: String! #
+  city: String! #
+  postalCode: String! #
+  stateOrProvince: String! #
+  country: String! #
+  zone: String #
+  longitude: String #
+  latitude: String #
+}
+
+type DeliveryAddress implements IAddress {
+  lastName: String! #
+  firstName: String! #
+  company: String #
+  telephone: String #
+  address: String! #
+  city: String! #
+  postalCode: String! #
+  stateOrProvince: String! #
+  country: String! #
+  zone: String #
+  longitude: String #
+  latitude: String #
+}
+
+###################
+#
+# Model
+#
+###################
+
+type Review {
+  id: ID! #
+  tenantId: ID! #
+  product: Product,
+  title: String,
+  description: String,
+  rating: String,
+  customer: Customer,
+  timestamp: Timestamp
+}
+
+
+type Brand {
+  id: ID! #
+  name: String,
+  slug: String,
+  info: String,
+  parent: String,
+  image: String,
+  uid: String,
+  brand: Number,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+type Cart {
+  id: ID! #
+  name: String,
+  info: String,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+type Category {
+  id: ID! #
+  name: String!,
+  slug: String,
+  info: String,
+  parent: Category,
+  children: [Category!],
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+type Country {
+  id: ID! #
+  code: String!
+  name: String!,
+  dialCode: String,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+# 
+enum DiscountTypeEnum {
+  Amount
+  PERCENT
+}
+
+#
+type Coupon {
+  id: ID! #
+  code: String!
+  amount: Float!
+  type: DiscountTypeEnum!
+  info: String,
+  minimumCartValue: Float
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+#
+type Feature {
+  id: ID! #
+  key: String,
+  val: String,
+  info: String,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+#
+type Invoice {
+  id: ID! #
+  name: String,
+  info: String,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+#
+type ProductVariant {
+  id: ID! #
+  image: String,
+  price: Float,
+  mrp: Float,
+  weight: String,
+  size: int,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+
+#
+type Product {
+  id: ID! #
+  sku: String!,
+  name: String,
+  nameLower: String,
+  slug: String,
+  category: Category,
+  brand: Brand,
+  info: String,
+  uid: String,
+  variants: [ProductVariant!],
+  features: [Feature!],
+  keyFeatures: [Feature!],
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+
+#
+type OrderItem {
+  id: ID! #
+  sku: String,
+  size: String,
+  quantity: int,
+  product: Product,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+#
+type Order {
+  id: ID! #
+  name: String,
+  slug: String,
+  info: String,
+  customer: Customer,
+  billing: Billing,
+  shipping: Shipping,
+  payment: Payment,
+  items: [OrderItem!]!,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+#
+type Shipping {
+  id: ID! #
+  name: String,
+  info: String,
+  carrier: String,
+  country: country,
+  carrier: String,
+  charge: Float,
+  minWeight: Float,
+  maxWeight: Float,
+  freeShipping: Float,
+  status: ItemStatusEnum,
+  timestamp: Timestamp
+}
+
+
+# Represents user of the system
+type User {
+  id: ID! #
+  tenantId: ID! # The tenant this user belongs to
+  firstName: String
+  lastName: String
+  tier: String # The tier this user is operating under
+  role: String # The role this user is playing
+  sub: String! # comming from cognito
+  email: AWSEmail # The user's email address.
+  userPoolId: String! # The userpool this user is registered to
+  status: ItemStatusEnum
+  description: String
+  comments(limit: Int, nextToken: String): PaginatedComments #
+  timestamp: Timestamp  
+}
+
+# A tenant is the owner od the account using the platform
+type Tenant {
+  id: ID! #
+  name: String!
+  description: String 
+  account: String # the account' name for this tenant represents.
+  company: String # the company' name this tenant represents.
+  owner: User! # the user admin of this tenant.
+  tier: String # the tier this tenant has signup to.
+  status: ItemStatusEnum
+  comments(limit: Int, nextToken: String): PaginatedComments #
+  timestamp: Timestamp
+}
+
+
+# A customer of the platform. Use it to create and track payments that belong to the same customer.
+type Customer implements IUser {
+  id: ID! # Unique identifier for the object.
+  address: Address # The customer’s address.
+  billingAddress: Address # The customer’s billing address.
+  shippingAddress: Address # Mailing and shipping address for the customer. Appears on invoices emailed to this customer.
+  description: # An arbitrary string attached to the object. Often useful for displaying to users.
+  name: # The customer’s full name or business name.
+  email: AWSEmail # The customer’s email address.
+  phone: AWSPhone # The customer’s phone number.
+  status: ItemStatusEnum
+  }
+
+
+
+
+
+
+
+
+
+
+
+# 1 - adding root query
+# 2 - defining all the queries we need to support
+type Query {
+  
+  getImageUploadUrl(extension: String, contentType: String): AWSURL! # returned a signed S3 Url so that users can upload their images and then use them
+
+  getMyTimeline(limit: Int!, nextToken: String): UnhydratedTweetsPage! # fetching my timeline
+  
+  getMyProfile: MyProfile! # which should look at my auathenticated user and then return my profile
+
+  getProfile(screenName: String!): OtherProfile! # fetching someone else's profile
+
+  getTweets(userId: ID!, limit: Int!, nextToken: String): TweetsPage!
+
+  getLikes(userId: ID!, limit: Int!, nextToken: String): UnhydratedTweetsPage! # fetching the tweets that the user has liked
+
+  getFollowers(userId: ID!, limit: Int!, nextToken: String): ProfilesPage! # fetching the list of profiles thet follows the user
+  
+  getFollowing(userId: ID!, limit: Int!, nextToken: String): ProfilesPage! # fetching the list of profiles thet the user is following
+}
+
+# 1 - adding root mutation
+# 2 - defining all the operations we need to support
+type Mutation {
+
+  # express cart
+  calculateDiscount(cart: Cart!): Float!
+  # express cart
+  createReview(newReview: ReviewInput!): Review!
+    # express cart
+  calculateShipping(cart: Cart!): Float!
+  
+  
+  createCustomer(newCustomer: CustomerInput!): Customer!
+
+  editMyProfile(newProfile: ProfileInput!): MyProfile!
+
+  tweet(text: String!): Tweet! # create a new tweet
+
+  like(tweetId: ID!): Boolean!
+  
+  unlike(tweetId: ID!): Boolean!
+  
+  retweet(tweetId: ID!): Retweet!
+  
+  unretweet(tweetId: ID!): Boolean!
+
+  reply(tweetId: ID!, text: String!): Reply!
+
+  follow(userId: ID!): Boolean!
+  
+  unfollow(userId: ID!): Boolean!
+
+}
+
+# we gonna be able to react whenever a new product is created in reatime with this subscription
+type Subscription {
+  
+}
+
+# capture all the arguments we can pass into my profile mutation
+input ProfileInput {
+  name: String!
+  imageUrl: AWSURL
+  backgroundImageUrl: AWSURL
+  bio: String
+  location: String
+  website: AWSURL
+  birthdate: AWSDate
+}
+
+# Define and interface that capture common Profile fields
+interface IProfile {
+  id: ID!
+  name: String!
+  screenName: String!
+  imageUrl: AWSURL # The image captured in the profile page
+  backgroundImageUrl: AWSURL # The background image for the profile page
+  bio: String
+  location: String
+  website: AWSURL
+  birthdate: AWSDate 
+  createdAt: AWSDateTime! # When the user joined twitter
+  tweets: TweetsPage! # the pages of this profile's tweets
+  followersCount: Int! # The numbers of followers
+  followingCount: Int! # the numbers of users i am following
+  tweetsCount: Int! # the number of tweets this profile has created
+  likesCounts: Int! # the number of tweets that i liked
+}
+
+type MyProfile implements IProfile {
+  id: ID!
+  name: String!
+  screenName: String!
+  imageUrl: AWSURL
+  backgroundImageUrl: AWSURL
+  bio: String
+  location: String
+  website: AWSURL
+  birthdate: AWSDate
+  createdAt: AWSDateTime!
+  tweets: TweetsPage!
+  followersCount: Int!
+  followingCount: Int!
+  tweetsCount: Int! 
+  likesCounts: Int!
+}
+
+type OtherProfile implements IProfile {
+  id: ID!
+  name: String!
+  screenName: String!
+  imageUrl: AWSURL
+  backgroundImageUrl: AWSURL
+  bio: String
+  location: String
+  website: AWSURL
+  birthdate: AWSDate
+  createdAt: AWSDateTime!
+  tweets: TweetsPage!
+  followersCount: Int!
+  followingCount: Int!
+  tweetsCount: Int!
+  likesCounts: Int!
+  following: Boolean! # Whether or not i am following this user
+  followedBy: Boolean! # Whether or not i have being followed by this user
+}
+
+# Define an interface that capture some common fields about a tweet or a reply
+interface ITweet {
+  id: ID!
+  profile: IProfile # The profile that created this tweet
+  createdAt: AWSDateTime! # when this tweet was created
+}
+
+type Tweet implements ITweet {
+  id: ID!
+  profile: IProfile
+  createdAt: AWSDateTime!
+  text: String! # the text in the tweet
+  replies: Int! # How many replies he has
+  likes: Int! # How many likes
+  retweets: Int! # How many retweets
+  liked: Boolean! # Whether or not we liked this tweet
+  retweeted: Boolean! # Whether or not we have retweeted
+}
+
+type Reply implements ITweet {
+  id: ID!
+  profile: IProfile 
+  createdAt: AWSDateTime!
+  inReplyToTweet: ITweet! # this is a reply to another tweet
+  inReplyToUsers: [IProfile!] # Then we are replying to a user
+  text: String!
+  replies: Int!
+  likes: Int!
+  retweets: Int!
+  liked: Boolean!
+  retweeted: Boolean!
+}
+
+type Retweet implements ITweet {
+  id: ID!
+  profile: IProfile # who retweeted this
+  createdAt: AWSDateTime! # when was the retweet
+  retweetOf: ITweet! # The original tweet thta is a retweet of
+}
+
+# a page of tweets
+type TweetsPage {
+  tweets: [ITweet!] # All the tweets contained in this page
+  nextToken: String # the returned token to fectch the next page (pagination)
+}
+
+type UnhydratedTweetsPage {
+  tweets: [ITweet!]
+  nextToken: String
+}
+
+type ProfilesPage {
+  profiles: [IProfile!]
+  nextToken: String
+}

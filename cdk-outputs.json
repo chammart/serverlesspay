@@ -1,0 +1,9 @@
+{
+  "ServerlesspayStack": {
+    "sepauthstacksepappcognitosepappcognitouserpoolclientID5BBBCB83": "3d12pf63s9je9nlu45at8v4p5",
+    "sepauthstacksepauthapiRestApiName99487AA7": "sep-auth-api",
+    "sepauthstacksepauthapiEndpoint607702E7": "https://693mqxu0lj.execute-api.us-east-1.amazonaws.com/prod/",
+    "sepauthstacksepappcognitosepappcognitouserpoolIDBFA149E4": "us-east-1_XwbNNy8U5",
+    "sepauthstacksepauthapiapiUrl994F30A1": "https://693mqxu0lj.execute-api.us-east-1.amazonaws.com/prod/"
+  }
+}
